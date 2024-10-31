@@ -1,0 +1,43 @@
+name: pipeline  # Define o nome do workflow, que aparece na interface do GitHub.
+
+on:  # Especifica os eventos que acionam o workflow.
+  push:  # Aciona o workflow em um evento de push no repositório.
+
+jobs:  # Define os jobs que serão executados como parte deste workflow.
+
+  build:  # Nome do primeiro job, chamado "build".
+    runs-on: ubuntu-latest  # Executa o job em um runner que usa a versão mais recente do Ubuntu.
+
+    steps:  # Define os passos que serão executados neste job.
+
+    - uses: actions/checkout@v2  # Faz o checkout do código do repositório usando a versão 2 da ação.
+      with:  # Configurações para a ação de checkout.
+        fetch-depth: 0  # Baixa todo o histórico do repositório (profundidade 0).
+
+    - name: Package  # Nome do passo, aqui ele está nomeado como "Package".
+      run: mvn package  # Executa o comando 'mvn package' para empacotar o projeto Maven.
+
+  publish:  # Nome do segundo job, chamado "publish".
+   runs-on: ubuntu-latest  # Este job também será executado em um runner Ubuntu.
+
+   needs: build  # Este job depende da conclusão bem-sucedida do job "build".
+
+   permissions:  # Define as permissões para este job.
+     contents: read  # Permite leitura do conteúdo do repositório.
+     packages: write  # Permite que o job escreva pacotes no registro de pacotes do GitHub.
+
+   steps:  # Define os passos que serão executados neste job.
+
+     - uses: actions/checkout@v3  # Faz o checkout do código do repositório usando a versão 3 da ação.
+
+     - uses: actions/setup-java@v3  # Usa a ação para configurar o ambiente Java. A versão 3 da ação é utilizada.
+       with:  # Configurações para a ação de setup do Java.
+         java-version: '11'  # Especifica que a versão do Java a ser instalada é a 11.
+         distribution: 'adopt'  # Define a distribuição do Java a ser instalada, neste caso, 'adopt'.
+         package: '*.jar'  # Especifica que o pacote a ser gerado é qualquer arquivo .jar.
+
+     - name: Publish package  # Nome do passo, aqui ele está nomeado como "Publish package".
+       run: mvn --batch-mode deploy  # Executa o comando 'mvn --batch-mode deploy' para publicar o pacote.
+
+       env:  # Define variáveis de ambiente para este passo.
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Define GITHUB_TOKEN para autenticação ao publicar pacotes, obtido dos segredos do repositório.
