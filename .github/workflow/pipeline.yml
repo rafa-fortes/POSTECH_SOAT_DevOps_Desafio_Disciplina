@@ -80,3 +80,4 @@ deploy-Prod:  # Nome do job para deploy em produção.
       shell: bash  # Utiliza o shell bash para executar o comando.
       run: |  # Comando a ser executado.
         echo "Deploy-PROD"  # Imprime "Deploy-PROD" no console.
+        
