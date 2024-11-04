@@ -42,40 +42,40 @@ jobs:  # Define os jobs que serão executados como parte deste workflow.
        env:  # Define variáveis de ambiente para este passo.
          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Define GITHUB_TOKEN para autenticação ao publicar pacotes, obtido dos segredos do repositório.
 
-deploy-STG:  # Nome do job para deploy em staging.
-  runs-on: ubuntu-latest  # Executa em um runner Ubuntu.
-  environment:  # Define o ambiente de deploy.
-    name: stg  # Nome do ambiente é "stg".
-  needs: publish  # Este job depende do job "publish".
+  deploy-STG:  # Nome do job para deploy em staging.
+    runs-on: ubuntu-latest  # Executa em um runner Ubuntu.
+    environment:  # Define o ambiente de deploy.
+      name: stg  # Nome do ambiente é "stg".
+    needs: publish  # Este job depende do job "publish".
 
-  if: github.ref == 'refs/heads/develop'  # Executa este job apenas se a branch for 'develop'.
-  steps:  # Define os passos que serão executados neste job.
+    if: github.ref == 'refs/heads/develop'  # Executa este job apenas se a branch for 'develop'.
+    steps:  # Define os passos que serão executados neste job.
     - name: Deploy  # Nome do passo de deploy.
       shell: bash  # Utiliza o shell bash para executar o comando.
       run: |  # Comando a ser executado.
         echo "Deploy STG"  # Imprime "Deploy STG" no console.
 
-deploy-Pre:  # Nome do job para deploy em pré-produção.
-  runs-on: ubuntu-latest  # Executa em um runner Ubuntu.
-  if: github.ref == 'refs/heads/release'  # Executa este job apenas se a branch for 'release'.
-  environment:  # Define o ambiente de deploy.
-    name: pre  # Nome do ambiente é "pre".
-  needs: publish  # Este job depende do job "publish".
+  deploy-Pre:  # Nome do job para deploy em pré-produção.
+    runs-on: ubuntu-latest  # Executa em um runner Ubuntu.
+    if: github.ref == 'refs/heads/release'  # Executa este job apenas se a branch for 'release'.
+    environment:  # Define o ambiente de deploy.
+      name: pre  # Nome do ambiente é "pre".
+    needs: publish  # Este job depende do job "publish".
 
-  steps:  # Define os passos que serão executados neste job.
-    - name: Deploy  # Nome do passo de deploy.
-      shell: bash  # Utiliza o shell bash para executar o comando.
-      run: |  # Comando a ser executado.
-        echo "Deploy PRE"  # Imprime "Deploy PRE" no console.
+    steps:  # Define os passos que serão executados neste job.
+      - name: Deploy  # Nome do passo de deploy.
+        shell: bash  # Utiliza o shell bash para executar o comando.
+        run: |  # Comando a ser executado.
+          echo "Deploy PRE"  # Imprime "Deploy PRE" no console.
 
-deploy-Prod:  # Nome do job para deploy em produção.
-  runs-on: ubuntu-latest  # Executa em um runner Ubuntu.
-  if: github.ref == 'refs/heads/main'  # Executa este job apenas se a branch for 'main'.
-  environment:  # Define o ambiente de deploy.
-    name: prod  # Nome do ambiente é "prod".
-  needs: publish  # Este job depende do job "publish".
+  deploy-Prod:  # Nome do job para deploy em produção.
+    runs-on: ubuntu-latest  # Executa em um runner Ubuntu.
+    if: github.ref == 'refs/heads/main'  # Executa este job apenas se a branch for 'main'.
+    environment:  # Define o ambiente de deploy.
+      name: prod  # Nome do ambiente é "prod".
+    needs: publish  # Este job depende do job "publish".
 
-  steps:  # Define os passos que serão executados neste job.
+    steps:  # Define os passos que serão executados neste job.
     - name: Deploy  # Nome do passo de deploy.
       shell: bash  # Utiliza o shell bash para executar o comando.
       run: |  # Comando a ser executado.
