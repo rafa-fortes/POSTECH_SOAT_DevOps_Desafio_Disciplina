@@ -1,0 +1,83 @@
+name: pipeline  # Define o nome do workflow, que aparece na interface do GitHub.
+
+on:  # Especifica os eventos que acionam o workflow.
+  push:  # Aciona o workflow em um evento de push no repositório.
+
+jobs:  # Define os jobs que serão executados como parte deste workflow.
+
+  build:  # Nome do primeiro job, chamado "build".
+    runs-on: ubuntu-latest  # Executa o job em um runner que usa a versão mais recente do Ubuntu.
+
+    steps:  # Define os passos que serão executados neste job.
+
+    - uses: actions/checkout@v2  # Faz o checkout do código do repositório usando a versão 2 da ação.
+      with:  # Configurações para a ação de checkout.
+        fetch-depth: 0  # Baixa todo o histórico do repositório (profundidade 0).
+
+    - name: Package  # Nome do passo, aqui ele está nomeado como "Package".
+      run: mvn package  # Executa o comando 'mvn package' para empacotar o projeto Maven.
+
+  publish:  # Nome do segundo job, chamado "publish".
+   runs-on: ubuntu-latest  # Este job também será executado em um runner Ubuntu.
+
+   needs: build  # Este job depende da conclusão bem-sucedida do job "build".
+
+   permissions:  # Define as permissões para este job.
+     contents: read  # Permite leitura do conteúdo do repositório.
+     packages: write  # Permite que o job escreva pacotes no registro de pacotes do GitHub.
+
+   steps:  # Define os passos que serão executados neste job.
+
+     - uses: actions/checkout@v3  # Faz o checkout do código do repositório usando a versão 3 da ação.
+
+     - uses: actions/setup-java@v3  # Usa a ação para configurar o ambiente Java. A versão 3 da ação é utilizada.
+       with:  # Configurações para a ação de setup do Java.
+         java-version: '11'  # Especifica que a versão do Java a ser instalada é a 11.
+         distribution: 'adopt'  # Define a distribuição do Java a ser instalada, neste caso, 'adopt'.
+         package: '*.jar'  # Especifica que o pacote a ser gerado é qualquer arquivo .jar.
+
+     - name: Publish package  # Nome do passo, aqui ele está nomeado como "Publish package".
+       run: mvn --batch-mode deploy  # Executa o comando 'mvn --batch-mode deploy' para publicar o pacote.
+
+       env:  # Define variáveis de ambiente para este passo.
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Define GITHUB_TOKEN para autenticação ao publicar pacotes, obtido dos segredos do repositório.
+
+deploy-STG:  # Nome do job para deploy em staging.
+  runs-on: ubuntu-latest  # Executa em um runner Ubuntu.
+  environment:  # Define o ambiente de deploy.
+    name: stg  # Nome do ambiente é "stg".
+  needs: publish  # Este job depende do job "publish".
+
+  if: github.ref == 'refs/heads/develop'  # Executa este job apenas se a branch for 'develop'.
+  steps:  # Define os passos que serão executados neste job.
+    - name: Deploy  # Nome do passo de deploy.
+      shell: bash  # Utiliza o shell bash para executar o comando.
+      run: |  # Comando a ser executado.
+        echo "Deploy STG"  # Imprime "Deploy STG" no console.
+
+deploy-Pre:  # Nome do job para deploy em pré-produção.
+  runs-on: ubuntu-latest  # Executa em um runner Ubuntu.
+  if: github.ref == 'refs/heads/release'  # Executa este job apenas se a branch for 'release'.
+  environment:  # Define o ambiente de deploy.
+    name: pre  # Nome do ambiente é "pre".
+  needs: publish  # Este job depende do job "publish".
+
+  steps:  # Define os passos que serão executados neste job.
+    - name: Deploy  # Nome do passo de deploy.
+      shell: bash  # Utiliza o shell bash para executar o comando.
+      run: |  # Comando a ser executado.
+        echo "Deploy PRE"  # Imprime "Deploy PRE" no console.
+
+deploy-Prod:  # Nome do job para deploy em produção.
+  runs-on: ubuntu-latest  # Executa em um runner Ubuntu.
+  if: github.ref == 'refs/heads/main'  # Executa este job apenas se a branch for 'main'.
+  environment:  # Define o ambiente de deploy.
+    name: prod  # Nome do ambiente é "prod".
+  needs: publish  # Este job depende do job "publish".
+
+  steps:  # Define os passos que serão executados neste job.
+    - name: Deploy  # Nome do passo de deploy.
+      shell: bash  # Utiliza o shell bash para executar o comando.
+      run: |  # Comando a ser executado.
+        echo "Deploy-PROD"  # Imprime "Deploy-PROD" no console.
+        
