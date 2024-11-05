@@ -64,4 +64,12 @@
 		</plugins>
 	</build>
 
+	<distributionManagement>
+		<repository>
+			<id>github</id> <!-- ID para autenticação -->
+			<name>GitHub Packages</name>
+			<url>https://maven.pkg.github.com/rafa-fortes/POSTECH_SOAT_DevOps_Desafio_Disciplina</url> <!-- URL do repositório -->
+		</repository>
+	</distributionManagement>
+
 </project>
