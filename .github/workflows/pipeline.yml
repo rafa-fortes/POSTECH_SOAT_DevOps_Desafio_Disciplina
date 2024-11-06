@@ -8,28 +8,32 @@ jobs:  # Define os jobs que serão executados como parte deste workflow.
   unit-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3 # 1. Realiza o checkout do código-fonte do repositório
         with:
           fetch-depth: 0
 
-      - run: mvn test
-      - name: Generate JaCoCo Bagde
-        id: jacoco
-        uses: cicirello/jacoco-badge-generator@v2.0.1
+      # 2. Executa os testes unitários usando o Maven
+      - run: mvn test            # Executa os testes do projeto Maven com o comando 'mvn test'
+      - name: Generate JaCoCo Bagde # 3. Gera o badge de cobertura de código com JaCoCo
+        id: jacoco # Atribui um ID à etapa para referenciar suas saídas em etapas subsequentes
+        uses: cicirello/jacoco-badge-generator@v2.0.1 # Ação que gera um badge de cobertura com base nos relatórios do JaCoCo
+
+      # 4. Exibe as porcentagens de cobertura no console para monitoramento
       - name: Log coverage percentage 
         run: | 
           echo "coverage = ${{ steps.jacoco.outputs.coverage }}"
           echo "branch coverage = ${{ steps.jacoco.outputs.branches }}"
-
+      
+      # 5. Faz o upload do relatório de cobertura gerado pelo JaCoCo como artefato
       - name: Upload JaCoCo coverage report 
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3 # Ação que faz o upload do relatório como artefato do GitHub
         with:
-          name: jacoco-report
+          name: jacoco-report # Nome do artefato que será enviado (o relatório de cobertura)
           path: target/site/jacoco
 
   build:  # Nome do primeiro job, chamado "build".
     runs-on: ubuntu-latest  # Executa o job em um runner que usa a versão mais recente do Ubuntu.
-    needs: unit-test
+    needs: unit-test        # Caminho onde o relatório do JaCoCo é gerado pelo Maven (certifique-se de que esse caminho esteja correto)
     steps:  # Define os passos que serão executados neste job.
     - uses: actions/checkout@v2  # Faz o checkout do código do repositório usando a versão 2 da ação.
       with:  # Configurações para a ação de checkout.
@@ -70,6 +74,18 @@ jobs:  # Define os jobs que serão executados como parte deste workflow.
       shell: bash  # Utiliza o shell bash para executar o comando.
       run: |  # Comando a ser executado.
         echo "Deploy STG"  # Imprime "Deploy STG" no console.
+
+  smoketest:
+    runs-on: ubuntu-latest
+    needs: deploy-STG
+    
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy
+        shell: bash
+        run: |
+          sh 'src/main/scripts/smoketest.sh'
 
   deploy-Pre:  # Nome do job para deploy em pré-produção.
     runs-on: ubuntu-latest  # Executa em um runner Ubuntu.
