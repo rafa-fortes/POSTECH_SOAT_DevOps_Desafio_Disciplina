@@ -5,11 +5,32 @@ on:  # Especifica os eventos que acionam o workflow.
 
 jobs:  # Define os jobs que serão executados como parte deste workflow.
 
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - run: mvn test
+      - name: Generate JaCoCo Bagde
+        id: jacoco
+        uses: rafael/jacoco-badge-generator@v2.0.1
+      - name: Log coverage percentage 
+        run: | 
+          echo "coverage = ${{ steps.jacoco.outputs.coverage }}"
+          echo "branch coverage = ${{ steps.jacoco.outputs.branches }}"
+
+      - name: Upload JaCoCo coverage report 
+        uses: actions/upload-artifac@v2
+        with:
+          name: jacoco-report
+          path: target/site/jacoco
+
   build:  # Nome do primeiro job, chamado "build".
     runs-on: ubuntu-latest  # Executa o job em um runner que usa a versão mais recente do Ubuntu.
-
+    needs: unit-test
     steps:  # Define os passos que serão executados neste job.
-
     - uses: actions/checkout@v2  # Faz o checkout do código do repositório usando a versão 2 da ação.
       with:  # Configurações para a ação de checkout.
         fetch-depth: 0  # Baixa todo o histórico do repositório (profundidade 0).
@@ -19,17 +40,12 @@ jobs:  # Define os jobs que serão executados como parte deste workflow.
 
   publish:  # Nome do segundo job, chamado "publish".
    runs-on: ubuntu-latest  # Este job também será executado em um runner Ubuntu.
-
    needs: build  # Este job depende da conclusão bem-sucedida do job "build".
-
    permissions:  # Define as permissões para este job.
      contents: read  # Permite leitura do conteúdo do repositório.
      packages: write  # Permite que o job escreva pacotes no registro de pacotes do GitHub.
-
    steps:  # Define os passos que serão executados neste job.
-
      - uses: actions/checkout@v3  # Faz o checkout do código do repositório usando a versão 3 da ação.
-
      - uses: actions/setup-java@v3  # Usa a ação para configurar o ambiente Java. A versão 3 da ação é utilizada.
        with:  # Configurações para a ação de setup do Java.
          java-version: '11'  # Especifica que a versão do Java a ser instalada é a 11.
