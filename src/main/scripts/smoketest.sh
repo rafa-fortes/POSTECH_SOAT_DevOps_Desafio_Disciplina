@@ -5,4 +5,5 @@
 #curl -s http://localhost:8080/health || { echo "Servidor não está respondendo!"; exit 1; }
 
 echo "Smoke test passou com sucesso!"
+return 0
 

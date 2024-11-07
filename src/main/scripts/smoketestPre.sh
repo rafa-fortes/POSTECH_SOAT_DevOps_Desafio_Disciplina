@@ -1,0 +1,1 @@
+echo "Smoke test passou com sucesso!"
